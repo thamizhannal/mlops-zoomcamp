@@ -46,6 +46,7 @@ def train_and_log_model(data_path, params):
         mlflow.log_metric("valid_rmse", valid_rmse)
         test_rmse = mean_squared_error(y_test, rf.predict(X_test), squared=False)
         mlflow.log_metric("test_rmse", test_rmse)
+        print("valid_rmse:{0}, test_rmse:{1}".format(valid_rmse,test_rmse))
 
 
 def run(data_path, log_top):
@@ -65,10 +66,17 @@ def run(data_path, log_top):
 
     # select the model with the lowest test RMSE
     experiment = client.get_experiment_by_name(EXPERIMENT_NAME)
-    # best_run = client.search_runs( ...  )[0]
+    #   experiment_ids="0",
+
+    best_run = client.search_runs(
+        experiment_ids = experiment.experiment_id,
+        order_by = ["metrics.test_rmse ASC"]
+        )[0]
 
     # register the best model
-    # mlflow.register_model( ... )
+    model_uri = f"runs/{best_run.info.run_id}/models"
+    print(f'Best Model URI:{model_uri}')
+    mlflow.register_model( model_uri, "RandomForestRegressionModel" )
 
 
 if __name__ == '__main__':
